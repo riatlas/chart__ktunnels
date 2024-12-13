@@ -42,28 +42,22 @@ securityContext: {}
 
 tunnels:
   - name: service1
+    enabled: true
+    port: 2345
 
-    # local port
-    servicePort: 2234
-    
-    # external ssh
+    # tunnel
+    servicePort: 5432
+    serviceHost: hostdb
+
+    sshPort: 22
     sshHost: host1
     sshUser: user1
-    
     sshKey: |
         -----BEGIN OPENSSH PRIVATE KEY-----
         HERE MY SSH KEY
         -----END OPENSSH PRIVATE KEY-----
 
-  - name: service2
-    servicePort: 1224
-    sshHost: host2
-    sshUser: user2
-
-    sshKey: |
-        -----BEGIN OPENSSH PRIVATE KEY-----
-        HERE MY SSH KEY
-        -----END OPENSSH PRIVATE KEY-----
+  
 
 
 resources: {}

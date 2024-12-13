@@ -1,4 +1,5 @@
 {{- range .Values.tunnels }}
+{{- if .enabled }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -11,7 +12,7 @@ spec:
   selector:
     matchLabels:
       {{- include "ktunnels.selectorLabels" $ | nindent 6 }}
-      run: {{ .name }}
+      run: {{ include "ktunnels.fullname" $ }}-{{ .name }}
   template:
     metadata:
       {{- with $.Values.podAnnotations }}
@@ -20,7 +21,7 @@ spec:
       {{- end }}
       labels:
         {{- include "ktunnels.labels" $ | nindent 8 }}
-        run: {{ .name }}
+        run: {{ include "ktunnels.fullname" $ }}-{{ .name }}
 	{{- with $.Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -48,24 +49,34 @@ spec:
             - "StrictHostKeyChecking=no"
             - "-N"
             - "-L"
-            - "0.0.0.0:{{ .servicePort }}"
+            - "0.0.0.0:{{ .port }}:{{ .serviceHost }}:{{ .servicePort }}"
             - "{{ .sshUser }}@{{ .sshHost }}"
+            - "-p"
+            - "{{ .sshPort | default "22" }}"
           ports:
             - name: http
-              containerPort: {{ .servicePort }}
+              containerPort: {{ .port }}
               protocol: TCP
-          livenessProbe: {}
-          readinessProbe: {}
+          livenessProbe:
+            tcpSocket:
+              port: {{ .port }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe: 
+            tcpSocket:
+              port: {{ .port }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
           resources:
             {{- toYaml $.Values.resources | nindent 12 }}
           volumeMounts:
             - name: sshkey-volume
-              mountPath: /etc/sshkeys
+              mountPath: /etc/sshkeys/ssh_key
               subPath: sshKey
       volumes:
         - name: sshkey-volume
           secret:
-            secretName: {{ .name }}
+            secretName: {{ include "ktunnels.fullname" $ }}-{{ .name }}
             defaultMode: 256
       {{- with $.Values.nodeSelector }}
       nodeSelector:
@@ -79,4 +90,5 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+{{- end }}
 {{- end }}

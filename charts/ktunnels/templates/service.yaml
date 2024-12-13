@@ -1,12 +1,13 @@
 {{- range .Values.tunnels }}
+{{- if .enabled }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "ktunnels.fullname" $ }}
+  name: {{ include "ktunnels.fullname" $ }}-{{ .name }}
   labels:
     {{- include "ktunnels.labels" $ | nindent 4 }}
-    run: {{ .name }}
+    run: {{ include "ktunnels.fullname" $ }}-{{ .name }}
 spec:
   type: {{ $.Values.service.type }}
   ports:
@@ -14,5 +15,6 @@ spec:
       protocol: TCP
   selector:
     {{- include "ktunnels.selectorLabels" $ | nindent 4 }}
-    run: {{ .name }}
+    run: {{ include "ktunnels.fullname" $ }}-{{ .name }}
+{{- end }}
 {{- end }}
